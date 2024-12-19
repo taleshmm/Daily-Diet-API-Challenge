@@ -71,6 +71,7 @@ def create_diet():
     
     if user_id != current_user.id:
         return jsonify({"message": "Action not allowed"}), 403
+    
     if name and user_id:   
         check_date = datetime.strptime(date, "%d/%m/%Y %H:%M:%S") if date  else datetime.now() 
         diet = Diet(name=name, description=description, date=check_date, is_inside_diet=is_inside_diet, user_id=user_id)
@@ -80,6 +81,30 @@ def create_diet():
         return jsonify({"message": f"Diet created with ID {diet.id} successfully!"})
     
     return jsonify({"message": "Credentials invalid!"}), 401
+
+@app.route('/diet/<int:id_diet>', methods=["PUT"])
+@login_required
+def uptade_diet(id_diet):
+    data = request.json
+    diet = Diet.query.get(id_diet)
+    
+    if diet: 
+        if diet.user_id != current_user.id:
+            return jsonify({"message": "Action not allowed"}), 403
+
+        new_date = data.get("date")
+        if new_date:
+            new_date = datetime.strptime(new_date, "%d/%m/%Y %H:%M:%S")
+        diet.name = data.get("name")
+        diet.description = data.get("description")
+        diet.date =  new_date if new_date else diet.date
+        diet.is_inside_diet = data.get("is_inside_diet")
+        db.session.commit()
+        return jsonify({"message": "Diet updated with success!"})
+    
+    return jsonify({"message": "Diet not found"}), 404
+    
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
