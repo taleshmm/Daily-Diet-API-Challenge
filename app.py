@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import bcrypt
 from flask import Flask, jsonify, request
 from flask_login import (LoginManager, current_user, login_required,
@@ -54,6 +56,28 @@ def create_user():
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": f"User created with ID {user.id} successfully!"})
+    
+    return jsonify({"message": "Credentials invalid!"}), 401
+
+@app.route('/diet', methods=['POST'])
+@login_required
+def create_diet():
+    datas = request.json
+    name = datas.get('name')
+    description = datas.get('description')
+    date = datas.get('date')
+    is_inside_diet = datas.get('is_inside_diet')
+    user_id = datas.get('user_id')
+    
+    if user_id != current_user.id:
+        return jsonify({"message": "Action not allowed"}), 403
+    if name and user_id:   
+        check_date = datetime.strptime(date, "%d/%m/%Y %H:%M:%S") if date  else datetime.now() 
+        diet = Diet(name=name, description=description, date=check_date, is_inside_diet=is_inside_diet, user_id=user_id)
+        
+        db.session.add(diet)
+        db.session.commit()
+        return jsonify({"message": f"Diet created with ID {diet.id} successfully!"})
     
     return jsonify({"message": "Credentials invalid!"}), 401
 
