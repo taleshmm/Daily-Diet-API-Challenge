@@ -104,7 +104,41 @@ def uptade_diet(id_diet):
     
     return jsonify({"message": "Diet not found"}), 404
     
+@app.route('/diet/<int:id_diet>', methods=["DELETE"])
+@login_required
+def delete_diet(id_diet):
+    diet = Diet.query.get(id_diet)
     
+    if diet: 
+        if diet.user_id != current_user.id:
+            return jsonify({"message": "Action not allowed"}), 403
+        
+        db.session.delete(diet)
+        db.session.commit()
+        return jsonify({"message": "Diet deleted with success!"})
+    
+    return jsonify({"message": "Diet not found"}), 404 
+
+@app.route('/diet', methods=['GET'])
+@login_required
+def read_diet():
+    diets = Diet.query.filter_by(user_id=current_user.id).all()
+    
+    if diets:
+        diets_data = [
+            {
+                "id": diet.id,
+                "name": diet.name,
+                "description": diet.description,
+                "date": diet.date.strftime("%d/%m/%Y %H:%M:%S"),
+                "is_inside_diet": diet.is_inside_diet,
+            }
+            for diet in diets
+        ]
+        return jsonify(diets_data), 200
+    
+    
+    return jsonify({"message": "Diet not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
