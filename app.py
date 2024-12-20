@@ -140,5 +140,26 @@ def read_diet():
     
     return jsonify({"message": "Diet not found"}), 404
 
+@app.route('/diet/<int:id_diet>', methods=['GET'])
+@login_required
+def read_diet_by_id(id_diet):
+    diet = Diet.query.filter(
+        Diet.id == id_diet, 
+        Diet.user_id == current_user.id
+        ).first()
+    
+    if diet:
+        diet_data = {
+            "id": diet.id,
+            "name": diet.name,
+            "description": diet.description,
+            "date": diet.date.strftime("%d/%m/%Y %H:%M:%S"),
+            "is_inside_diet": diet.is_inside_diet,
+        }
+        return jsonify(diet_data), 200
+    
+    
+    return jsonify({"message": "Diet not found"}), 404
+
 if __name__ == '__main__':
     app.run(debug=True)
